@@ -1,0 +1,59 @@
+# Install Visual Studio code
+# https://code.visualstudio.com/
+
+# Install "REST Client" extension
+# Go -> Extensions, search for "REST Client"
+
+
+@titleId = 12345
+@segmentId = ABC123
+@secretKey = SECRETKEYHERE
+
+
+### 1 - Run ExportPlayersInSegment first ###
+###
+# @name ExportPlayersInSegment
+
+POST https://{{titleId}}.playfabapi.com/Admin/ExportPlayersInSegment HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip
+Connection: keep-alive
+Content-Type: application/json
+X-Secretkey: 	{{secretKey}}
+
+{
+  "SegmentId": "{{segmentId}}"
+}
+
+@exportId = {{ExportPlayersInSegment.response.body.data.ExportId}}
+
+
+### 2 - Run GetSegmentExport second ###
+###
+# @name GetSegmentExport
+
+POST https://{{titleId}}.playfabapi.com/Admin/GetSegmentExport HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip
+Connection: keep-alive
+Content-Type: application/json
+X-Secretkey: {{secretKey}}
+
+{
+  "ExportId": "{{exportId}}"
+}
+
+@downloadUrl = {{GetSegmentExport.response.body.data.IndexUrl}}
+
+
+### 3 - Downlaod the segment index third ###
+###
+# @name downloadsegmentindex
+GET {{downloadUrl}}
+
+
+#### copy/paste each TSV  file from the index and download
+###
+# @name downloadfile
+GET <<url from index file here>>
+
