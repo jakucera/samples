@@ -46,13 +46,13 @@ X-Secretkey: {{secretKey}}
 @downloadUrl = {{GetSegmentExport.response.body.data.IndexUrl}}
 
 
-### 3 - Downlaod the segment index third ###
+### 3 - Download the segment index third ###
 ###
 # @name downloadsegmentindex
 GET {{downloadUrl}}
 
 
-#### copy/paste each TSV  file from the index and download
+#### copy/paste each TSV file from the index and download
 ###
 # @name downloadfile
 GET <<url from index file here>>
