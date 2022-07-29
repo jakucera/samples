@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Export Players in Segment</title>
+    <style>
+        body, html {
+            font-family: sans-serif;
+        }
+
+        #output {
+            font-size: small
+        }
+    </style>
+  </head>
+  <body>
+    <main>
+        <div>
+            <div>
+                <label>Title ID: </label>
+                <input type="text" id="titleid" value="">
+            </div>
+            <div>
+                <label>Segment ID: </label>
+                <input type="text" id="segmentid" value="">
+            </div>
+            <div>
+                <label>Secret Key: </label>
+                <input type="text" id="secretkey" value="">
+            </div>
+            <div>
+                <button id="export">Export Players</button>
+            </div>
+        </div>
+        <div>
+            <table id="output">
+            </table>
+            <div id="info"></div>
+        </div>
+    </main>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.6.0.min.js"></script>
+	<script>
+        const delaySeconds = 2
+        var header = false
+
+        var exportPlayersInSegment = function () {
+            var url = "https://" + $("#titleid").val() + ".playfabapi.com/admin/ExportPlayersInSegment"
+            var request = { "SegmentId": $("#segmentid").val() }
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: JSON.stringify(request),
+                success: (r, s, x) => { setTimeout(() => { getExportStatus(r, s, x) }, delaySeconds * 1000) },
+                error: reportError,
+                dataType: "json",
+                headers: {
+                    "accept": "*/*",
+                    "Content-Type": "application/json",
+                    "X-SecretKey": $("#secretkey").val()
+                }
+            })
+        }
+
+        var getExportStatus = function (response, status, xhr) {
+            var exportId = response.data.ExportId
+            var url = "https://" + $("#titleid").val() + ".playfabapi.com/admin/GetSegmentExport"
+            var request = {
+                "ExportId": exportId
+            }
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: JSON.stringify(request),
+                success: (r, s, x) => { checkExportStatus(r, s, x, exportId) },
+                error: reportError,
+                dataType: "json",
+                headers: {
+                    "accept": "*/*",
+                    "Content-Type": "application/json",
+                    "X-SecretKey": $("#secretkey").val()
+                }
+            })
+        }
+
+        var checkExportStatus = function (response, status, xhr, exportId) {            
+            if (response.data.State == "InProgress") {
+                setTimeout(() => getExportStatus({"data": { "ExportId": exportId }}), delaySeconds * 1000)
+            } else if (response.data.State == "Error") {
+                reportError(null, "export failed", "")
+            } else {
+                downloadIndexFile(response.data.IndexUrl)
+            }
+        }
+
+        var downloadIndexFile = function (indexUrl) {
+            console.log("indexurl: " + indexUrl)
+
+            $.ajax({
+                url: indexUrl,
+                type: "GET",
+                success: downloadDataFiles,
+                error: reportError,
+                contentType: "text/plain"
+            })
+        }
+
+        var downloadDataFiles = function (response, status) {
+            var files = response.split("\n")
+
+            files.forEach(file => {
+                downloadFile(file)
+            });
+        }
+
+        var downloadFile = function (fileUrl) {
+            console.log("getting: " + fileUrl)
+
+            $.ajax({
+                url: fileUrl,
+                type: "GET",
+                success: readProfileData,
+                error: reportError,
+                contentType: "text/plain"
+            })
+        }
+
+        var readProfileData = function (profileData) {
+            var lines = profileData.split("\n")
+
+            if (!header) {
+                header = true
+                var columns = lines[0].split("\t")
+
+                var row = $("<tr>");
+                for (var c = 0; c < columns.length; c++) {
+                    var col = $("<th>").html(columns[c])
+                    row.append(col)
+                }
+
+                $("#output").append(row)
+            }
+
+            for (var i = 1; i < lines.length; i++) {
+                if (lines[i].length > 1) {
+                    var columns = lines[i].split("\t")
+                    var row = $("<tr>");
+
+                    for (var c = 0; c < columns.length; c++) {
+                        var col = $("<td>").html(columns[c])
+                        row.append(col)
+                    }
+                    
+                    $("#output").append(row)
+                }
+            }
+
+            $("#export").prop("disabled", false);
+        }
+
+        var reportError = function(xhr, errorType, ex) {
+            $("#info").text(errorType + ": " + JSON.stringify(xhr) + ": " + ex);
+            $("#export").prop("disabled", false);
+        }
+
+        $("#export").click(() => {
+            $("#export").prop("disabled", true);
+            exportPlayersInSegment()
+        })
+    </script>
+  </body>
+</html>
