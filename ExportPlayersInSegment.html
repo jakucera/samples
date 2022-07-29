@@ -97,8 +97,6 @@
         }
 
         var downloadIndexFile = function (indexUrl) {
-            console.log("indexurl: " + indexUrl)
-
             $.ajax({
                 url: indexUrl,
                 type: "GET",
@@ -109,16 +107,18 @@
         }
 
         var downloadDataFiles = function (response, status) {
-            var files = response.split("\n")
+            if (response.length == 0) {
+                reportError(null, "empty segment, no results")
+            } else {
+                var files = response.split("\n")
 
-            files.forEach(file => {
-                downloadFile(file)
-            });
+                files.forEach(file => {
+                    downloadFile(file)
+                });
+            }
         }
 
         var downloadFile = function (fileUrl) {
-            console.log("getting: " + fileUrl)
-
             $.ajax({
                 url: fileUrl,
                 type: "GET",
@@ -153,7 +153,7 @@
                         var col = $("<td>").html(columns[c])
                         row.append(col)
                     }
-                    
+
                     $("#output").append(row)
                 }
             }
@@ -161,8 +161,8 @@
             $("#export").prop("disabled", false);
         }
 
-        var reportError = function(xhr, errorType, ex) {
-            $("#info").text(errorType + ": " + JSON.stringify(xhr) + ": " + ex);
+        var reportError = function(xhr, error, ex) {
+            $("#info").text(error);
             $("#export").prop("disabled", false);
         }
 
