@@ -33,6 +33,9 @@
             <div>
                 <button id="export">Export Players</button>
             </div>
+            <div>
+                <button id="save" disabled>Save as File</button>
+            </div>
         </div>
         <div>
             <table id="output">
@@ -44,9 +47,11 @@
 	<script>
         const delaySeconds = 2
         var header = false
+        var tsvData
 
         var exportPlayersInSegment = function () {
             header = false
+            tsvData = null
             $("#output").empty()
             $("#info").text("")
 
@@ -146,6 +151,7 @@
                 }
 
                 $("#output").append(row)
+                tsvData = lines[0]
             }
 
             for (var i = 1; i < lines.length; i++) {
@@ -159,21 +165,35 @@
                     }
 
                     $("#output").append(row)
+                    tsvData += lines[i]
                 }
             }
 
             $("#export").prop("disabled", false);
+            $("#save").prop("disabled", false);
+        }
+
+        var saveDataAsFile = async function () {
+            var file = await window.showSaveFilePicker({
+                suggestedName: "segment_" + $("#segmentid").val() + "_export.tsv"
+            });
+            var stream = await file.createWritable();
+            await stream.write(new Blob([tsvData], {type: "text/plain"}));
+            await stream.close();
         }
 
         var reportError = function(xhr, error, ex) {
             $("#info").text(error);
             $("#export").prop("disabled", false);
+            $("#save").prop("disabled", true);
         }
 
         $("#export").click(() => {
             $("#export").prop("disabled", true);
             exportPlayersInSegment()
         })
+
+        $("#save").click(saveDataAsFile)
     </script>
   </body>
 </html>
