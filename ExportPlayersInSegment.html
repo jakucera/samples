@@ -46,6 +46,10 @@
         var header = false
 
         var exportPlayersInSegment = function () {
+            header = false
+            $("#output").empty()
+            $("#info").text("")
+
             var url = "https://" + $("#titleid").val() + ".playfabapi.com/admin/ExportPlayersInSegment"
             var request = { "SegmentId": $("#segmentid").val() }
 
