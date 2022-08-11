@@ -112,6 +112,7 @@ async Task SaveOutputCombined(string indexUrl, string outputPath)
     using (var client = new HttpClient())
     using (var writer = new StreamWriter(outputPath))
     {
+        int playerCount = 0;
         int fileNum = 0;
         var indexData = await client.GetStringAsync(indexUrl);
 
@@ -142,12 +143,14 @@ async Task SaveOutputCombined(string indexUrl, string outputPath)
                         else if (lineNum > 1)
                         {
                             writer.WriteLine(line);
+                            playerCount++;
                         }
                     }
                 }
                 while (line != null);
             }
         }
+        Console.WriteLine($"Segment export complete. Saved {playerCount} player profiles from segment {segmentId} to {outputPath}.");
     }
 }
 
@@ -175,4 +178,6 @@ async Task SaveOutputSeparateFiles(string indexUrl, string outputPath)
             }
         }
     }
+
+    Console.WriteLine("Segment export complete.");
 }
