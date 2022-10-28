@@ -43,7 +43,7 @@ if (string.IsNullOrEmpty(exportId))
 
     if (exportResponse.Error != null)
     {
-        Console.WriteLine(exportResponse.Error);
+        Console.WriteLine($"{exportResponse.Error.HttpStatus}: {exportResponse.Error.ErrorMessage}");
         return;
     }
 
@@ -64,7 +64,14 @@ do
     Console.WriteLine($"Checking export status.");
 
     exportStatusResponse = await PlayFabAdminAPI.GetSegmentExportAsync(exportStatusRequest);
-    Console.WriteLine($"Export status is '{exportStatusResponse.Result.State}'.");
+    
+    if (exportStatusResponse.Error != null || exportStatusResponse.Result.State == "Error")
+    {
+        Console.WriteLine($"{exportStatusResponse.Error.HttpStatus}: {exportStatusResponse.Error.ErrorMessage}");
+        return;
+    }
+
+    Console.WriteLine($"Export status is '{exportStatusResponse.Result?.State}'.");
 
     if (exportStatusResponse.Result.State == "Expired")
     {
@@ -75,12 +82,6 @@ do
     if (exportStatusResponse.Result.State == "NotFound")
     {
         Console.WriteLine($"Export '{exportId}' was not found. Verify the export id and try again.");
-        return;
-    }
-
-    if (exportStatusResponse.Error != null || exportStatusResponse.Result.State == "Error")
-    {
-        Console.WriteLine(exportStatusResponse.Error);
         return;
     }
 

@@ -99,7 +99,7 @@
             if (response.data.State == "InProgress") {
                 setTimeout(() => getExportStatus({"data": { "ExportId": exportId }}), delaySeconds * 1000)
             } else if (response.data.State == "Error") {
-                reportError(null, "export failed", "")
+                reportError(xhr, "export failed", "")
             } else {
                 downloadIndexFile(response.data.IndexUrl)
             }
@@ -183,7 +183,12 @@
         }
 
         var reportError = function(xhr, error, ex) {
-            $("#info").text(error);
+            if (xhr && xhr.responseJSON) {
+                $("#info").text(xhr.responseJSON.error + ": " + xhr.responseJSON.errorMessage);
+            } else {
+                $("#info").text(error);
+            }
+            
             $("#export").prop("disabled", false);
             $("#save").prop("disabled", true);
         }
